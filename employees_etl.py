@@ -6,6 +6,7 @@ from delta.tables import DeltaTable
 bronze_path = "/dbfs/tmp/bronze/employees"
 silver_path = "/dbfs/tmp/silver/employees"
 gold_path = "/dbfs/tmp/gold/employees"
+# Path to the raw data file
 raw_file_path = "dbfs:/FileStore/tables/data/employees.txt"
 
 spark = SparkSession.builder.appName("EmployeeETL").getOrCreate()
