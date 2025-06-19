@@ -1,0 +1,7 @@
+what name,address,salary,job_title,department,hire_date
+John Doe,123 Main St,75000,Software Engineer,Engineering,2018-06-01
+Jane Smith,456 Oak Ave,82000,Data Scientist,Data,2019-09-15
+Alice Johnson,789 Pine Rd,95000,Product Manager,Product,2017-03-22
+Bob Lee,321 Maple Dr,67000,QA Analyst,Quality,2020-01-10
+Carol White,654 Cedar Ln,105000,Director,Management,2015-11-30
+
