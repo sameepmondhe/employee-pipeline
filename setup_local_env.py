@@ -1,12 +1,13 @@
 import subprocess
 import sys
 import os
+import importlib.util
 
 REQUIRED_PACKAGES = [
     ("pytest", None),
     ("pyspark", "3.3.2"),
     ("delta-spark", "2.2.0"),
-    ("pkg_resources", None)
+    ("pandas", None)
 ]
 
 REQUIRED_PYTHON_MAJOR = 3
@@ -14,21 +15,23 @@ REQUIRED_PYTHON_MINOR = 9
 
 
 def check_and_install_package(pkg, version=None):
-    try:
-        import pkg_resources
-        if version:
-            installed_version = pkg_resources.get_distribution(pkg).version
-            if installed_version == version:
-                print(f"{pkg}=={version} is already installed.")
-                return
+    try:        # Use importlib.metadata for version check, but handle import name vs. package name
+        import importlib.metadata
+        try:
+            installed_version = importlib.metadata.version(pkg)
+            if version:
+                if installed_version == version:
+                    print(f"{pkg}=={version} is already installed.")
+                    return
+                else:
+                    print(f"{pkg} version {installed_version} found, but {version} required. Upgrading...")
             else:
-                print(f"{pkg} version {installed_version} found, but {version} required. Upgrading...")
-        else:
-            __import__(pkg)
-            print(f"{pkg} is already installed.")
-            return
-    except Exception:
-        print(f"{pkg} not found. Installing...")
+                print(f"{pkg} is already installed.")
+                return
+        except importlib.metadata.PackageNotFoundError:
+            print(f"{pkg} not found. Installing...")
+    except Exception as e:
+        print(f"Error checking {pkg}: {e}. Attempting install...")
     # Install or upgrade
     pip_args = [sys.executable, '-m', 'pip', 'install']
     if version:
@@ -55,4 +58,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

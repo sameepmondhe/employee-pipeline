@@ -7,6 +7,11 @@ Validation rules:
 - 'name' must not be null
 - 'salary' must be castable to double
 - 'hire_date' must be a valid date in 'yyyy-MM-dd' format
+- 'department' must not be null
+- 'status' must be either 'Active' or 'Inactive'
+- 'gender' must be one of 'Male', 'Female', or 'Other', or null
+- 'date_of_birth' must be a valid date in 'yyyy-MM-dd' format or null
+- 'employment_type' must be one of 'Full-Time', 'Part-Time', 'Contract', or null
 
 Logging is used to track the number of records at each stage.
 """
@@ -35,7 +40,13 @@ def main():
         .filter(col("name").isNotNull()) \
         .filter(col("salary").cast("double").isNotNull()) \
         .withColumn("hire_date", to_date(col("hire_date"), "yyyy-MM-dd")) \
-        .filter(col("hire_date").isNotNull())
+        .filter(col("hire_date").isNotNull()) \
+        .filter(col("department").isNotNull()) \
+        .filter((col("status") == "Active") | (col("status") == "Inactive")) \
+        .filter((col("gender").isNull()) | (col("gender").isin(["Male", "Female", "Other"]))) \
+        .withColumn("date_of_birth_parsed", to_date(col("date_of_birth"), "yyyy-MM-dd")) \
+        .filter((col("date_of_birth").isNull()) | (col("date_of_birth_parsed").isNotNull())) \
+        .filter((col("employment_type").isNull()) | (col("employment_type").isin(["Full-Time", "Part-Time", "Contract"])))
     output_count = valid_df.count()
     logger.info(f"Number of records after validation: {output_count}")
 
@@ -43,12 +54,12 @@ def main():
     valid_df.write.format("delta").mode("overwrite").save(SILVER_PATH)
     logger.info(f"Silver table written to {SILVER_PATH}")
 
-    # Identify and write invalid records to the Error Delta table
-    invalid_df = df.subtract(valid_df)
-    invalid_count = invalid_df.count()
-    logger.info(f"Number of records errored out: {invalid_count}")
+    # Identify and write invalid records to the Error Delta table using employee_id
+    valid_ids = [row['employee_id'] for row in valid_df.select('employee_id').distinct().collect()]
+    invalid_df = df.filter(~col('employee_id').isin(valid_ids))
     invalid_df.write.format("delta").mode("overwrite").save(ERROR_PATH)
     logger.info(f"Errored records written to {ERROR_PATH}")
+    logger.info(f"Number of invalid records: {invalid_df.count()}")
 
 if __name__ == "__main__":
     main()

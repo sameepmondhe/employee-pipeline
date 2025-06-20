@@ -1,0 +1,22 @@
+[
+  {"name": "employee_id", "order": 1, "type": "int", "length": 10, "mandatory": true},
+  {"name": "name", "order": 2, "type": "str", "length": 50, "mandatory": true, "special_checks": ["no_html", "no_colon"]},
+  {"name": "salary", "order": 3, "type": "float", "length": 12, "mandatory": true},
+  {"name": "hire_date", "order": 4, "type": "date", "length": 10, "format": "yyyy-MM-dd", "mandatory": true},
+  {"name": "department", "order": 5, "type": "str", "length": 30, "mandatory": true},
+  {"name": "email", "order": 6, "type": "str", "length": 50, "mandatory": false, "special_checks": ["no_html", "no_colon"]},
+  {"name": "phone", "order": 7, "type": "str", "length": 15, "mandatory": false},
+  {"name": "address", "order": 8, "type": "str", "length": 100, "mandatory": false},
+  {"name": "city", "order": 9, "type": "str", "length": 30, "mandatory": false},
+  {"name": "state", "order": 10, "type": "str", "length": 20, "mandatory": false},
+  {"name": "zip", "order": 11, "type": "str", "length": 10, "mandatory": false},
+  {"name": "country", "order": 12, "type": "str", "length": 20, "mandatory": false},
+  {"name": "manager_id", "order": 13, "type": "int", "length": 10, "mandatory": false},
+  {"name": "status", "order": 14, "type": "str", "length": 10, "mandatory": true, "allowed_values": ["Active", "Inactive"]},
+  {"name": "termination_date", "order": 15, "type": "date", "length": 10, "format": "yyyy-MM-dd", "mandatory": false},
+  {"name": "gender", "order": 16, "type": "str", "length": 10, "mandatory": false, "allowed_values": ["Male", "Female", "Other"]},
+  {"name": "date_of_birth", "order": 17, "type": "date", "length": 10, "format": "yyyy-MM-dd", "mandatory": false},
+  {"name": "job_level", "order": 18, "type": "str", "length": 10, "mandatory": false},
+  {"name": "work_location", "order": 19, "type": "str", "length": 30, "mandatory": false},
+  {"name": "employment_type", "order": 20, "type": "str", "length": 15, "mandatory": false, "allowed_values": ["Full-Time", "Part-Time", "Contract"]}
+]

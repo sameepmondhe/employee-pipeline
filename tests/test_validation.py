@@ -15,14 +15,31 @@ def spark():
         .getOrCreate()
 
 def test_validation_removes_invalid_rows(spark, tmp_path, monkeypatch):
-    # Prepare test data
-    data = [
-        Row(name="John Doe", address="123 Main St", salary=75000, job_title="Engineer", department="Engineering", hire_date="2018-06-01"),
-        Row(name=None, address="456 Oak Ave", salary=82000, job_title="Data Scientist", department="Data", hire_date="2019-09-15"),
-        Row(name="Alice Johnson", address="789 Pine Rd", salary=None, job_title="Manager", department="Product", hire_date="2017-03-22"),
-        Row(name="Bob Lee", address="321 Maple Dr", salary=67000, job_title="QA Analyst", department="Quality", hire_date="invalid-date"),
+    # Prepare test data with all columns from the schema
+    columns = [
+        "employee_id", "name", "salary", "hire_date", "department", "email", "phone", "address", "city", "state", "zip", "country", "manager_id", "status", "termination_date", "gender", "date_of_birth", "job_level", "work_location", "employment_type"
     ]
-    df = spark.createDataFrame(data)
+    data = [
+        # Valid row
+        ("1001", "John Doe", "75000", "2018-06-01", "Engineering", "john.doe@example.com", "555-1234", "123 Main St", "Springfield", "CA", "90001", "USA", "1005", "Active", None, "Male", "1985-04-12", "Level 2", "San Francisco", "Full-Time"),
+        # Invalid: name is None
+        ("1002", None, "82000", "2019-09-15", "Data", "jane.smith@example.com", "555-5678", "456 Oak Ave", "Metropolis", "NY", "10001", "USA", "1001", "Active", None, "Female", "1990-07-23", "Level 3", "New York", "Full-Time"),
+        # Invalid: salary is None
+        ("1003", "Alice Johnson", None, "2017-03-22", "Product", "alice.johnson@example.com", "555-8765", "789 Pine Rd", "Centerville", "TX", "73301", "USA", "1001", "Inactive", "2022-12-31", "Female", "1982-11-05", "Level 4", "Austin", "Part-Time"),
+        # Invalid: hire_date is invalid
+        ("1004", "Bob Lee", "67000", "invalid-date", "Quality", "bob.lee@example.com", "555-4321", "321 Maple Dr", "Laketown", "FL", "33101", "USA", "1001", "Active", None, "Male", "1993-02-17", "Level 1", "Miami", "Full-Time"),
+        # Invalid: gender is not allowed
+        ("1005", "Invalid Gender", "50000", "2020-01-01", "QA", "invalid.gender@example.com", "555-0000", "1 Test St", "Testville", "TX", "73301", "USA", "1001", "Active", None, "Alien", "1990-01-01", "Level 1", "Houston", "Full-Time"),
+        # Invalid: status is not allowed
+        ("1006", "Invalid Status", "50000", "2020-01-01", "QA", "invalid.status@example.com", "555-0001", "2 Test St", "Testville", "TX", "73301", "USA", "1001", "Unknown", None, "Male", "1990-01-01", "Level 1", "Houston", "Full-Time"),
+        # Invalid: employment_type is not allowed
+        ("1007", "Invalid EmpType", "50000", "2020-01-01", "QA", "invalid.emptype@example.com", "555-0002", "3 Test St", "Testville", "TX", "73301", "USA", "1001", "Active", None, "Male", "1990-01-01", "Level 1", "Houston", "Intern"),
+        # Invalid: date_of_birth is not a date
+        ("1008", "Invalid DOB", "50000", "2020-01-01", "QA", "invalid.dob@example.com", "555-0003", "4 Test St", "Testville", "TX", "73301", "USA", "1001", "Active", None, "Male", "not-a-date", "Level 1", "Houston", "Full-Time"),
+        # Invalid: department is None
+        ("1009", "Missing Dept", "50000", "2020-01-01", None, "missing.dept@example.com", "555-0004", "5 Test St", "Testville", "TX", "73301", "USA", "1001", "Active", None, "Male", "1990-01-01", "Level 1", "Houston", "Full-Time"),
+    ]
+    df = spark.createDataFrame(data, columns)
     bronze_path = str(tmp_path / "bronze")
     silver_path = str(tmp_path / "silver")
     error_path = str(tmp_path / "error")
@@ -43,7 +60,7 @@ def test_validation_removes_invalid_rows(spark, tmp_path, monkeypatch):
     assert len(result) == 1
     assert result[0]["name"] == "John Doe"
 
-    # Check that 3 records got errored out
+    # Check that 8 records got errored out
     error_df = spark.read.format("delta").load(error_path)
     error_result = error_df.collect()
-    assert len(error_result) == 3
+    assert len(error_result) == 8
