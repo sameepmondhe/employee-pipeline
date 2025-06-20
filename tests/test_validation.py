@@ -6,7 +6,13 @@ import os
 
 @pytest.fixture(scope="session")
 def spark():
-    return SparkSession.builder.master("local[1]").appName("TestSession").getOrCreate()
+    return SparkSession.builder \
+        .master("local[1]") \
+        .appName("TestSession") \
+        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+        .config("spark.jars.packages", "io.delta:delta-core_2.12:2.2.0") \
+        .getOrCreate()
 
 def test_validation_removes_invalid_rows(spark, tmp_path, monkeypatch):
     # Prepare test data
@@ -34,4 +40,3 @@ def test_validation_removes_invalid_rows(spark, tmp_path, monkeypatch):
     # Only the first row is valid
     assert len(result) == 1
     assert result[0]["name"] == "John Doe"
-
