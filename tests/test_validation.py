@@ -25,11 +25,13 @@ def test_validation_removes_invalid_rows(spark, tmp_path, monkeypatch):
     df = spark.createDataFrame(data)
     bronze_path = str(tmp_path / "bronze")
     silver_path = str(tmp_path / "silver")
+    error_path = str(tmp_path / "error")
     df.write.format("delta").mode("overwrite").save(bronze_path)
 
     # Patch paths in validate_employees.py
     monkeypatch.setattr("src.silver.validate_employees.BRONZE_PATH", bronze_path)
     monkeypatch.setattr("src.silver.validate_employees.SILVER_PATH", silver_path)
+    monkeypatch.setattr("src.silver.validate_employees.ERROR_PATH", error_path)
 
     # Run validation
     validate_main()
@@ -40,3 +42,8 @@ def test_validation_removes_invalid_rows(spark, tmp_path, monkeypatch):
     # Only the first row is valid
     assert len(result) == 1
     assert result[0]["name"] == "John Doe"
+
+    # Check that 3 records got errored out
+    error_df = spark.read.format("delta").load(error_path)
+    error_result = error_df.collect()
+    assert len(error_result) == 3
